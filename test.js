@@ -203,7 +203,7 @@ test('match CHT (Cursor Horizontal Tabulation) ESC[nI', t => {
 
 test('match all ECMA-48 CSI final bytes (0x40-0x7E)', t => {
 	for (let code = 0x40; code <= 0x7E; code++) {
-		const finalByte = String.fromCharCode(code);
+		const finalByte = String.fromCodePoint(code);
 		const seq = `\u001B[1${finalByte}`;
 		const input = `hello${seq}world`;
 		t.is(input.match(ansiRegex())[0], seq);
