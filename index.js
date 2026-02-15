@@ -5,10 +5,13 @@ export default function ansiRegex({onlyFirst = false} = {}) {
 	// OSC sequences only: ESC ] ... ST (non-greedy until the first ST)
 	const osc = `(?:\\u001B\\][\\s\\S]*?${ST})`;
 
-	// CSI and related: ESC/C1, optional intermediates, optional params (supports ; and :) then final byte
-	const csi = '[\\u001B\\u009B][[\\]()#;?]*(?:\\d{1,4}(?:[;:]\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]';
+	// CSI and related: ESC/C1, optional params (supports ; and :), optional intermediate bytes (0x20-0x2F), then final byte (0x40-0x7E)
+	const csi = '[\\u001B\\u009B][[\\]()#;?]*(?:[\\d;:]*(?:[\\u0020-\\u002F]*[\\u0040-\\u007E]))';
 
-	const pattern = `${osc}|${csi}`;
+	// ESC followed by a private-use final byte (0x3C-0x3E: < = >), e.g. DECKPAM, DECKPNM, DECANM
+	const escFp = '\\u001B[<=>]';
+
+	const pattern = `${osc}|${csi}|${escFp}`;
 
 	return new RegExp(pattern, onlyFirst ? undefined : 'g');
 }

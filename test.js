@@ -159,6 +159,81 @@ test('does not match ESC followed by unsupported final', t => {
 	t.is(inputString.match(ansiRegex()), null);
 });
 
+test('match ECH (Erase Character) ESC[nX', t => {
+	t.is('hello\u001B[31Xworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[5Xworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[5Xworld'.match(ansiRegex())[0], '\u001B[5X');
+});
+
+test('match ICH (Insert Character) ESC[n@', t => {
+	t.is('hello\u001B[3@world'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[3@world'.match(ansiRegex())[0], '\u001B[3@');
+});
+
+test('match REP (Repeat) ESC[nb', t => {
+	t.is('hello\u001B[2bworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[2bworld'.match(ansiRegex())[0], '\u001B[2b');
+});
+
+test('match VPA (Vertical Position Absolute) ESC[nd', t => {
+	t.is('hello\u001B[5dworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[5dworld'.match(ansiRegex())[0], '\u001B[5d');
+});
+
+test('match VPR (Vertical Position Relative) ESC[ne', t => {
+	t.is('hello\u001B[3eworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[3eworld'.match(ansiRegex())[0], '\u001B[3e');
+});
+
+test('match SU (Scroll Up) ESC[nS and SD (Scroll Down) ESC[nT', t => {
+	t.is('hello\u001B[3Sworld'.match(ansiRegex())[0], '\u001B[3S');
+	t.is('hello\u001B[3Tworld'.match(ansiRegex())[0], '\u001B[3T');
+	t.is('hello\u001B[3Sworld'.replace(ansiRegex(), ''), 'helloworld');
+});
+
+test('match CBT (Cursor Backward Tabulation) ESC[nZ', t => {
+	t.is('hello\u001B[2Zworld'.match(ansiRegex())[0], '\u001B[2Z');
+	t.is('hello\u001B[2Zworld'.replace(ansiRegex(), ''), 'helloworld');
+});
+
+test('match CHT (Cursor Horizontal Tabulation) ESC[nI', t => {
+	t.is('hello\u001B[4Iworld'.match(ansiRegex())[0], '\u001B[4I');
+	t.is('hello\u001B[4Iworld'.replace(ansiRegex(), ''), 'helloworld');
+});
+
+test('match all ECMA-48 CSI final bytes (0x40-0x7E)', t => {
+	for (let code = 0x40; code <= 0x7E; code++) {
+		const finalByte = String.fromCharCode(code);
+		const seq = `\u001B[1${finalByte}`;
+		const input = `hello${seq}world`;
+		t.is(input.match(ansiRegex())[0], seq);
+		t.is(input.replace(ansiRegex(), ''), 'helloworld');
+	}
+});
+
+test('match CSI with intermediate bytes', t => {
+	// DECSCUSR: ESC[ n SP q
+	const decscusr = '\u001B[2 q';
+	t.is(`hello${decscusr}world`.match(ansiRegex())[0], decscusr);
+	t.is(`hello${decscusr}world`.replace(ansiRegex(), ''), 'helloworld');
+});
+
+test('match CSI with no parameters', t => {
+	t.is('hello\u001B[Xworld'.match(ansiRegex())[0], '\u001B[X');
+	t.is('hello\u001B[Xworld'.replace(ansiRegex(), ''), 'helloworld');
+});
+
+test('match CSI with DEC private mode prefix', t => {
+	t.is('hello\u001B[?25hworld'.match(ansiRegex())[0], '\u001B[?25h');
+	t.is('hello\u001B[?25hworld'.replace(ansiRegex(), ''), 'helloworld');
+	t.is('hello\u001B[?25lworld'.match(ansiRegex())[0], '\u001B[?25l');
+});
+
+test('match multi-param CSI with all final bytes', t => {
+	t.is('hello\u001B[1;2Xworld'.match(ansiRegex())[0], '\u001B[1;2X');
+	t.is('hello\u001B[1;2Xworld'.replace(ansiRegex(), ''), 'helloworld');
+});
+
 // Testing against extended codes (excluding codes ending in 0-9)
 for (const [codeSetKey, codeSetValue] of Object.entries(ansiCodes)) {
 	for (const [code, codeInfo] of codeSetValue) {
