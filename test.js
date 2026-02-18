@@ -44,7 +44,7 @@ test('match only first', t => {
 
 test('match terminal link', t => {
 	for (const ST of ['\u0007', '\u001B\u005C', '\u009C']) {
-		t.regex(`\u000B]8;k=v;https://example-a.com/?a_b=1&c=2#tit%20le${ST}click\u001B]8;;${ST}`, ansiRegex());
+		t.regex(`\u001B]8;k=v;https://example-a.com/?a_b=1&c=2#tit%20le${ST}click\u001B]8;;${ST}`, ansiRegex());
 		t.regex(`\u001B]8;;mailto:no-replay@mail.com${ST}mail\u001B]8;;${ST}`, ansiRegex());
 		t.deepEqual(`\u001B]8;k=v;https://example-a.com/?a_b=1&c=2#tit%20le${ST}click\u001B]8;;${ST}`.match(ansiRegex()), [
 			`\u001B]8;k=v;https://example-a.com/?a_b=1&c=2#tit%20le${ST}`,
@@ -150,12 +150,12 @@ test('does not match bracketed text without ESC', t => {
 });
 
 test('does not match incomplete CSI', t => {
-	const inputString = '\\u001B[';
+	const inputString = '\u001B[';
 	t.is(inputString.match(ansiRegex()), null);
 });
 
 test('does not match ESC followed by unsupported final', t => {
-	const inputString = 'pre\\u001B`post';
+	const inputString = 'pre\u001B`post';
 	t.is(inputString.match(ansiRegex()), null);
 });
 
